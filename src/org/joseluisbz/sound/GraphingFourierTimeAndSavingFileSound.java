@@ -217,11 +217,11 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
               
               System.out.println("bufferSize:" + bufferSize);
               
-              //INI Save File 
+              // INI Save File 
               final PipedOutputStream SrcSavePOStream = new PipedOutputStream();
-              final PipedInputStream SrcSavePIStream = new PipedInputStream();
-              SrcSavePIStream.connect(SrcSavePOStream);
-              aisRecording = new AudioInputStream((InputStream)SrcSavePIStream,
+              final PipedInputStream SnkSavePIStream = new PipedInputStream();
+              SnkSavePIStream.connect(SrcSavePOStream);
+              aisRecording = new AudioInputStream((InputStream)SnkSavePIStream,
                   audioformat, AudioSystem.NOT_SPECIFIED);
               Runnable runnableSave = () -> {
                 try {
@@ -230,7 +230,7 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
               };
               Thread threadSave = new Thread(runnableSave);
               threadSave.start();
-              //END Save File
+              // END Save File
               
               // INI Graph File
               final PipedOutputStream SrcPlotPOStream = new PipedOutputStream();
@@ -341,6 +341,7 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
               threadPlot.start();
               // END Graph File
               
+              // INI Microphone Capture
               byte[] buffer = new byte[bufferSize];
               tdLine.start();   // start capturing
               while (true) {
@@ -349,7 +350,8 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
                   SrcSavePOStream.write(buffer);
                   SrcPlotPOStream.write(buffer);
                 }
-              }
+              } 
+              // END Microphone Capture
             } catch (LineUnavailableException | IOException ex) {
               System.out.println("thrdRecording.run:" + ex.toString());
             }
