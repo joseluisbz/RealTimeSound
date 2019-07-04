@@ -1,9 +1,7 @@
-
 package org.joseluisbz.sound;
 
 //import org.joseluisbz.sound.PanelChart;
 //import org.joseluisbz.sound.FourierTransform;
-
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.io.File;
@@ -28,17 +26,17 @@ import javax.swing.SwingWorker;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 /**
  *
  * @author joseluisbz@gmail.com
  */
 public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
-  
+
   private Thread thrdRecording = null;
   private Thread thrdSaving = null;
   private File fileRecordedWav = null;
   private AudioInputStream aisRecording = null;
+
   /**
    * Creates new form GraphingFourierTimeAndSavingFileSound
    */
@@ -67,13 +65,7 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
     jtfFile = new javax.swing.JTextField();
 
     setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-    addInputMethodListener(new java.awt.event.InputMethodListener() {
-      public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
-        formInputMethodTextChanged(evt);
-      }
-      public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
-      }
-    });
+    
 
     jspMakeSound.setDividerLocation(512);
     jspMakeSound.setOneTouchExpandable(true);
@@ -192,9 +184,22 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
   }// </editor-fold>//GEN-END:initComponents
 
   private void jtbCaptureActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbCaptureActionPerformed
-    
-    final AudioFormat audioformat = new AudioFormat(16000 /*Frequency*/,
-      16 /* two bytes per sample */, 2 /*Stereo*/, true /*Signed*/, true /*bigEndian*/);
+//    double[] testI = new double[] { 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0 };
+//    double[] testO = FourierTransform.customFFT(testI);
+//    System.out.println("\ttestI = " + Arrays.toString(testI));
+//    System.out.println("\ttestO = " + Arrays.toString(testO));
+//testI:1,2,3,4,5,6,7,8
+//testO:4.5,1.30656296487638,0.707106781186548,0.541196100146197,0.5,0.541196100146197,0.707106781186547,1.30656296487638
+
+//	testI = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+//	testO = [4.5, 1.3065629648763766, 0.7071067811865476, 0.5411961001461971, 0.5, 0.5411961001461969, 0.7071067811865475, 1.3065629648763764]
+    int sampleRate = 44100;//8000;
+    final AudioFormat audioformat = new AudioFormat(sampleRate /*44100 sampleRate*/,
+        16 /* two bytes per sample */, 1 /*Stereo*/, true /*Signed*/, true /*bigEndian*/);
+    System.out.println("audioformat.getFrameSize():" + audioformat.getFrameSize());
+    int frameSize = ((16 /* two bytes per sample */ + 7) / 8) * 1 /*Stereo*/;
+    System.out.println("frameSize:" + frameSize);
+
     final DataLine.Info dlInfo = new DataLine.Info(TargetDataLine.class, audioformat);
     if (!AudioSystem.isLineSupported(dlInfo)) {
       System.out.println("Line not supported");
@@ -202,155 +207,68 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
     try {
       final TargetDataLine tdLine = (TargetDataLine) AudioSystem.getLine(dlInfo);
       if (jtbCapture.isSelected()) {
-        jtfFile.setText(getPathParent(this.getClass()) + "Recorded_" 
+        jtfFile.setText(getPathParent(this.getClass()) + "Recorded_"
             + new SimpleDateFormat("yyyyMMdd-HHmmss.SSS").format(Calendar.getInstance().getTime()) + ".wav");
         fileRecordedWav = new File(jtfFile.getText());
+
         final AudioFileFormat.Type afType = AudioFileFormat.Type.WAVE;
+
         thrdRecording = new Thread() {
           @Override
           public void run() {
             try {
               tdLine.open(audioformat);
-        
-              int bufferSize = (int) audioformat.getSampleRate() 
+              int BefBufferSize = (int) audioformat.getSampleRate()
                   * audioformat.getFrameSize(); //1Sec/40 = 25 milli Second
-              
-              System.out.println("bufferSize:" + bufferSize);
-              
+//              
+              double pow = Math.floor(Math.log((int) audioformat.getSampleRate()) / Math.log(2.0));
+              int base = (int) Math.pow(2.0, pow);
+              int bufferSize = (int) Math.pow(2.0, 11); //base * audioformat.getFrameSize();
+              System.out.println();
+              System.out.println("audioformat.getSampleRate(): " + audioformat.getSampleRate());
+              System.out.println("pow: " + pow + ", base: " + base);
+              System.out.println("BefBufferSize: " + BefBufferSize + ", bufferSize: " + bufferSize);
+              //int sizePower2 = (int)Math.pow(2.0, pow);
+
               // INI Save File 
-              final PipedOutputStream SrcSavePOStream = new PipedOutputStream();
-              final PipedInputStream SnkSavePIStream = new PipedInputStream();
-              SnkSavePIStream.connect(SrcSavePOStream);
-              aisRecording = new AudioInputStream((InputStream)SnkSavePIStream,
-                  audioformat, AudioSystem.NOT_SPECIFIED);
+              final PipedOutputStream srcSavePOStream = new PipedOutputStream();
+              final PipedInputStream snkSavePIStream = new PipedInputStream(bufferSize);
+              snkSavePIStream.connect(srcSavePOStream);
+              aisRecording = new AudioInputStream((InputStream) snkSavePIStream, audioformat, AudioSystem.NOT_SPECIFIED);
+              //aisRecording = new AudioInputStream((InputStream) snkSavePIStream, audioformat, bufferSize);
               Runnable runnableSave = () -> {
                 try {
                   AudioSystem.write(aisRecording, afType, fileRecordedWav);
-                } catch (IOException ex) { /*Pipe broken*/}
+                } catch (IOException ex) {
+                  /*Pipe broken*/
+                }
               };
+
               Thread threadSave = new Thread(runnableSave);
               threadSave.start();
               // END Save File
-              
+
               // INI Graph File
-              final PipedOutputStream SrcPlotPOStream = new PipedOutputStream();
-              final PipedInputStream SnkPlotPIStream = new PipedInputStream();
-              SnkPlotPIStream.connect(SrcPlotPOStream);
-              Runnable runnablePlot = () -> {
-                try {
-                  int qtyBytes;
-                  byte[] incomingBytes = new byte[bufferSize];
-                  int numBytesPerSample = audioformat.getSampleSizeInBits()/8;
-                  int numChannels = audioformat.getChannels();
-                  int frameSize = audioformat.getFrameSize();
-                  int bytesframeSize = numBytesPerSample*numChannels;
-                  Double sampleRateTime = (double)audioformat.getSampleRate();
-                  
-                  while ((qtyBytes = SnkPlotPIStream.read(incomingBytes)) != -1) {
-                    byte[] bytesSamples = new byte[qtyBytes];
-                    System.arraycopy(incomingBytes, 0, bytesSamples, 0, qtyBytes);
-                    int qtySamples = qtyBytes/frameSize;
-                    
-                    double[] samplesTime = getSamplesBuffer(bytesSamples, 
-                        numBytesPerSample, numChannels, "left", 0, qtySamples);
-                    
-                    double pow = Math.floor(Math.log(qtySamples) / Math.log(2.0));
-                    int sizePower2 = (int)Math.pow(2.0, pow);
-                    
-                    double[] freqs = new double[qtySamples];
-                    double[] samplesPower2 = new double[sizePower2];
-                    System.arraycopy(samplesTime, 0, samplesPower2, 0, sizePower2);
-                    
-                    double[] time = new double[qtySamples];
-                    double counter = 0.0;
-                    for (int i = 0; i < time.length; i++) {
-                      time[i] = counter / sampleRateTime;//
-                      counter++;
-                      freqs[i] = (double)i/qtySamples*sampleRateTime/1000.0;
-                    }
-                    
-                    // INI Time
-                    SwingWorker swingWorkerPlotTime = new SwingWorker() {
-                      PanelChart panelChartTimeSound = new PanelChart();
-                      @Override protected Void doInBackground() throws Exception {
-                        panelChartTimeSound.restoreDefaultValues();
-                        panelChartTimeSound.setNameVbleX("time");
-                        panelChartTimeSound.setNameVbleY("sound(time)");
-                        panelChartTimeSound.setFracX(3);
-                        panelChartTimeSound.setFracY(3);
-                        int maxValue = (256*8) - 1;//8192:(256*32) - 1, //32767:(256*128) - 1 = 
-                        panelChartTimeSound.setMaxY(maxValue);
-                        panelChartTimeSound.setMinY(-maxValue);
-                        //panelChartTimeSound.useMaxY(true);
-                        //panelChartTimeSound.useMinY(true);
-                        panelChartTimeSound.setGridDivHorzX(8);
-                        panelChartTimeSound.setGridDivVertY(8);
-                        panelChartTimeSound.setNameTitleX("Time");
-                        panelChartTimeSound.addVble("sound", time, samplesTime, Color.GREEN);
-                        return null;
-                      }
-                      @Override protected void done() {
-                        if (panelChartTimeSound.hasPlottable()) {
-                          setPanelInPanel(jpMakeSoundTime, 
-                              panelChartTimeSound.getChart(jpMakeSoundTime.getWidth(), jpMakeSoundTime.getHeight()));
-                          panelChartTimeSound.delAllVble();
-                          panelChartTimeSound = null;
-                        }
-                      }
-                    };
-                    swingWorkerPlotTime.execute();
-                    // END Time
-                   
-                    // INI FFT
-                    double[] fft = FourierTransform.customFFT(samplesPower2);
-                    double[] halfFFT = new double[sizePower2/2];
-                    double[] halfFreq = new double[sizePower2/2];
-                    System.arraycopy(freqs, 0, halfFreq, 0, halfFreq.length);
-                    System.arraycopy(fft, 0, halfFFT, 0, halfFFT.length);
-                    
-                    SwingWorker swingWorkerPlotFreq = new SwingWorker() {
-                      PanelChart panelChartFreqSound = new PanelChart();
-                      @Override protected Void doInBackground() throws Exception {
-                        panelChartFreqSound.restoreDefaultValues();
-                        panelChartFreqSound.useColorBack(false);
-                        panelChartFreqSound.setNameVbleX("freq");
-                        panelChartFreqSound.setNameVbleY("sound(freq)");
-                        panelChartFreqSound.setGridDivHorzX(8);
-                        panelChartFreqSound.setGridDivVertY(8);
-                        panelChartFreqSound.setNameTitleX("FFT");
-                        panelChartFreqSound.addVble("sound", halfFreq, halfFFT, new Color(0, 255, 192));
-                        return null;
-                      }
-                      @Override protected void done() {
-                        if (panelChartFreqSound.hasPlottable()) {
-                          setPanelInPanel(jpMakeSoundFFT, 
-                              panelChartFreqSound.getChart(jpMakeSoundFFT.getWidth(), jpMakeSoundFFT.getHeight()));
-                          panelChartFreqSound.delAllVble();
-                          panelChartFreqSound = null;
-                        }
-                      }
-                    };
-                    swingWorkerPlotFreq.execute();
-                    // END FFT
-                  }
-                } catch (IOException ex) {
-                  System.out.println("runnablePlot:" + ex.toString());
-                }
-              };
+              final PipedOutputStream srcPlotPOStream = new PipedOutputStream();
+              final PipedInputStream snkPlotPIStream = new PipedInputStream(bufferSize);
+              snkPlotPIStream.connect(srcPlotPOStream);
+
+              Runnable runnablePlot = runnablePlot(bufferSize, audioformat, snkPlotPIStream, jpMakeSoundTime, jpMakeSoundFFT);
               Thread threadPlot = new Thread(runnablePlot);
               threadPlot.start();
               // END Graph File
-              
+
               // INI Microphone Capture
               byte[] buffer = new byte[bufferSize];
               tdLine.start();   // start capturing
               while (true) {
-                int count = tdLine.read(buffer, 0, buffer.length);
+                int count = tdLine.read(buffer, 0, bufferSize);
                 if (count > 0) {
-                  SrcSavePOStream.write(buffer);
-                  SrcPlotPOStream.write(buffer);
+                  //System.out.println("thrdRecording.count:" + count);
+                  srcSavePOStream.write(buffer);
+                  srcPlotPOStream.write(buffer);
                 }
-              } 
+              }
               // END Microphone Capture
             } catch (LineUnavailableException | IOException ex) {
               System.out.println("thrdRecording.run:" + ex.toString());
@@ -391,20 +309,156 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
     }
   }//GEN-LAST:event_jtbCaptureActionPerformed
 
-  private void formInputMethodTextChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_formInputMethodTextChanged
-    // TODO add your handling code here:
-  }//GEN-LAST:event_formInputMethodTextChanged
+  private static void plotTime(JPanel jpMakeSoundTime, double[] time, double[] samplesTime) {
+    SwingWorker swingWorkerPlotTime = new SwingWorker() {
+      PanelChart panelChartTimeSound = new PanelChart();
 
-  private void setPanelInPanel(JPanel jpContainer, JPanel jpContained) {
+      @Override
+      protected Void doInBackground() throws Exception {
+        panelChartTimeSound.restoreDefaultValues();
+        panelChartTimeSound.setNameVbleX("time");
+        panelChartTimeSound.setNameVbleY("sound(time)");
+        panelChartTimeSound.setFracX(3);
+        panelChartTimeSound.setFracY(3);
+        int maxValue = (256 * 32) - 1;//8192:(256*32) - 1, //32767:(256*128) - 1 = 
+        panelChartTimeSound.setMaxY(maxValue);
+        panelChartTimeSound.setMinY(-maxValue);
+        panelChartTimeSound.useMaxY(true);
+        panelChartTimeSound.useMinY(true);
+        panelChartTimeSound.setGridDivHorzX(8);
+        panelChartTimeSound.setGridDivVertY(8);
+        panelChartTimeSound.setDigitsIndicatorY(10);
+        panelChartTimeSound.useDigitsIndicatorY(true);
+        panelChartTimeSound.viewVariableLabels(false);
+        panelChartTimeSound.setNameTitleX("Time");
+        panelChartTimeSound.addVble("sound", time, samplesTime, Color.GREEN);
+        return null;
+      }
+
+      @Override
+      protected void done() {
+        if (panelChartTimeSound.hasPlottable()) {
+          setPanelInPanel(jpMakeSoundTime,
+              panelChartTimeSound.getChart(jpMakeSoundTime.getWidth(), jpMakeSoundTime.getHeight()));
+          //panelChartTimeSound.delAllVble();
+          //panelChartTimeSound = null;
+        }
+      }
+    };
+    swingWorkerPlotTime.execute();
+  }
+
+  private static void plotFFT(JPanel jpMakeSoundFFT, double[] freqs, double[] fft) {
+    double[] halfFFT = new double[fft.length / 2];
+    double[] halfFreq = new double[fft.length / 2];
+    System.arraycopy(freqs, 0, halfFreq, 0, halfFreq.length);
+    System.arraycopy(fft, 0, halfFFT, 0, halfFFT.length);
+
+    SwingWorker swingWorkerPlotFreq = new SwingWorker() {
+      PanelChart panelChartFreqSound = new PanelChart();
+
+      @Override
+      protected Void doInBackground() throws Exception {
+        //System.out.println("halfFFT.length: " + halfFFT.length);
+        //System.out.println("\thalfFreq = " + Arrays.toString(halfFreq));
+        panelChartFreqSound.restoreDefaultValues();
+        panelChartFreqSound.useColorBack(false);
+        panelChartFreqSound.setNameVbleX("freq");
+        panelChartFreqSound.setNameVbleY("sound(freq)");
+        panelChartFreqSound.setMinY(0);
+        panelChartFreqSound.useMinY(true);
+        panelChartFreqSound.setMaxY(512.0);
+        panelChartFreqSound.useMaxY(true);
+        panelChartFreqSound.setGridDivHorzX(8);
+        panelChartFreqSound.setGridDivVertY(8);
+        panelChartFreqSound.setDigitsIndicatorY(8);
+        panelChartFreqSound.useDigitsIndicatorY(true);
+        panelChartFreqSound.viewVariableLabels(false);
+        panelChartFreqSound.setNameTitleX("FFT");
+        panelChartFreqSound.addVble("sound", halfFreq, halfFFT, new Color(0, 255, 192));
+        return null;
+      }
+
+      @Override
+      protected void done() {
+        if (panelChartFreqSound.hasPlottable()) {
+          setPanelInPanel(jpMakeSoundFFT, panelChartFreqSound.getChart(jpMakeSoundFFT.getWidth(), jpMakeSoundFFT.getHeight()));
+          //panelChartFreqSound.delAllVble();
+          //panelChartFreqSound = null;
+        }
+      }
+    };
+    swingWorkerPlotFreq.execute();
+  }
+
+  private static Runnable runnablePlot(int bufferSize, AudioFormat audioformat,
+      PipedInputStream snkPlotPIStream, JPanel jpMakeSoundTime, JPanel jpMakeSoundFFT) {
+    Runnable runnablePlot = () -> {
+      try {
+        int qtyBytes;
+        byte[] incomingBytes = new byte[bufferSize];
+        int numBytesPerSample = audioformat.getSampleSizeInBits() / 8;
+        int numChannels = audioformat.getChannels();
+        int frameSize = audioformat.getFrameSize();
+        //int bytesframeSize = numBytesPerSample*numChannels;
+        Double sampleRateTime = (double) audioformat.getSampleRate();
+
+        while ((qtyBytes = snkPlotPIStream.read(incomingBytes)) != -1) {
+          byte[] bytesSamples = new byte[qtyBytes];
+          System.arraycopy(incomingBytes, 0, bytesSamples, 0, qtyBytes);
+          int qtySamples = qtyBytes / frameSize;
+
+          double[] samplesTime = getSamplesBuffer(bytesSamples, numBytesPerSample, numChannels, "left", 0, qtySamples);
+
+          double newPow = Math.floor(Math.log(qtySamples) / Math.log(2.0));
+          int newSizePower2 = (int) Math.pow(2.0, newPow);
+          //System.out.println("qtyBytes:" + qtyBytes + ", newSizePower2:" + newSizePower2);
+
+          double[] freqs = new double[qtySamples];
+          double[] samplesPower2 = new double[newSizePower2];
+          System.arraycopy(samplesTime, 0, samplesPower2, 0, newSizePower2);
+          double[] fft = FourierTransform.customFFT(samplesPower2);
+
+          double[] time = new double[qtySamples];
+          double counter = 0.0;
+          for (int i = 0; i < time.length; i++) {
+            //*/
+//                      byte hByte = bytesSamples[i * 2 + 1];
+//                      byte lByte = bytesSamples[i * 2 + 0];
+//                      samplesTime[i] = (int)(short)((hByte << 8) | lByte);
+            //*/
+            time[i] = counter / sampleRateTime;//
+            counter++;
+            freqs[i] = (double) i / qtySamples * sampleRateTime / 1000.0;
+//            if (i < 10) {
+//              System.out.println("bufferSize:" + bufferSize
+//                  + ", sampleRateTime:" + sampleRateTime + ", qtySamples:"
+//                  + qtySamples + ", time[" + i + "]:" + time[i]
+//                  + ", freqs[" + i + "]:" + freqs[i] + ",  ");
+//            }
+          }
+//          System.out.println();
+          plotTime(jpMakeSoundTime, time, samplesTime);
+          plotFFT(jpMakeSoundFFT, freqs, fft);
+
+        }
+      } catch (IOException ex) {
+        System.out.println("runnablePlot:" + ex.toString());
+      }
+    };
+    return runnablePlot;
+  }
+
+  private static void setPanelInPanel(JPanel jpContainer, JPanel jpContained) {
     jpContainer.removeAll();
     jpContainer.setLayout(new GridLayout(1, 1));
     jpContainer.add(jpContained);
     jpContained.repaint();
   }
-  
-  private double[] getSamplesBuffer(byte[] buffer, int numBytesPerSample,
+
+  private static double[] getSamplesBuffer(byte[] buffer, int numBytesPerSample,
       int numChannels, String channel, int start, int quantity) {
-    
+
     if (!(quantity > 0)) {
       //Quantity (Num Required Samples) must be greater than zero
       return null;
@@ -432,31 +486,31 @@ public class GraphingFourierTimeAndSavingFileSound extends javax.swing.JFrame {
             buffer[position + 0], buffer[position + 1]);
       }
       if (numBytesPerSample == 1) {
-        samples[i] = (double)byte2intSmpl(buffer[position]);
+        samples[i] = (double) byte2intSmpl(buffer[position]);
       }
     }
     return samples;
   }
-  
-  private int Byte2IntLit(byte Byte00, byte Byte08) {
+
+  private static int Byte2IntLit(byte Byte00, byte Byte08) {
     //Bytes To Integer – Little Endianness
     return (((Byte08) << 8) | ((Byte00 & 0xFF)));
   }
-  
-  private int byte2intSmpl(byte theByte) {
-    return (short)(((theByte - 128) & 0xFF) << 8);
+
+  private static int byte2intSmpl(byte theByte) {
+    return (short) (((theByte - 128) & 0xFF) << 8);
   }
-  
-  private boolean isSecondChannel(String channel) {
+
+  private static boolean isSecondChannel(String channel) {
     return channel.equalsIgnoreCase("last") || channel.equalsIgnoreCase("right");
   }
-  
+
   private String getPathParent(Class c) {
     String p = c.getProtectionDomain().getCodeSource().getLocation().getPath();
     String drp = new File(p).getParent();
     return drp + System.getProperty("file.separator");
   }
-  
+
   /**
    * @param args the command line arguments
    */

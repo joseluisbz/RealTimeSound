@@ -6,8 +6,6 @@ package org.joseluisbz.sound;
  * and open the template in the editor.
  */
 
-
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.event.MouseEvent;
@@ -22,6 +20,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.swing.event.MouseInputListener;
 import javax.swing.JPanel;
 
@@ -30,15 +30,15 @@ import javax.swing.JPanel;
  * @author joseluisbz
  */
 public class PanelChart {
-  private final ArrayList<BasicStroke> arlBscStrk = new ArrayList<>();    //Vector de BasicStroke de la Variable
-  private final ArrayList<Color> arlColor = new ArrayList<>();    //Vector de Color de la Variable
-  private final ArrayList<Boolean> arlView = new ArrayList<>();    //Vector de Visibilidad de la Variable
-  private final ArrayList<String> arlName = new ArrayList<>();  //Vector de Nombre de la Variable
-  private final ArrayList<String> arlLabel = new ArrayList<>();  //Vector de Label de la Variable
-//  private final ArrayList<Double []> arlX = new ArrayList<>();//Vector de Arreglo de X de la Variable
-  private final ArrayList<double []> arlX = new ArrayList<>();//Vector de Arreglo de X de la Variable
-//  private final ArrayList<Double []> arlY = new ArrayList<>();//Vector de Arreglo de X de la Variable
-  private final ArrayList<double []> arlY = new ArrayList<>();//Vector de Arreglo de X de la Variable
+  private final List<BasicStroke> listBscStrk = new ArrayList<>();    //Vector de BasicStroke de la Variable
+  private final List<Color> listColor = new ArrayList<>();    //Vector de Color de la Variable
+  private final List<Boolean> listView = new ArrayList<>();    //Vector de Visibilidad de la Variable
+  private final List<String> listName = new ArrayList<>();  //Vector de Nombre de la Variable
+  private final List<String> listLabel = new ArrayList<>();  //Vector de Label de la Variable
+//  private final List<Double []> listX = new ArrayList<>();//Vector de Arreglo de X de la Variable
+  private final List<double []> listX = new ArrayList<>();//Vector de Arreglo de X de la Variable
+//  private final List<Double []> listY = new ArrayList<>();//Vector de Arreglo de X de la Variable
+  private final List<double []> listY = new ArrayList<>();//Vector de Arreglo de X de la Variable
   private final int borderHorz = 0, borderVert = 0;
   public static final Double DOUBLE_MAX_VALUE = Double.MAX_VALUE;
   public static final Double DOUBLE_MIN_VALUE = -Double.MAX_VALUE;
@@ -90,6 +90,11 @@ public class PanelChart {
   private boolean bUseMinY = false;
   private boolean bUseMaxY = false;
   
+  private boolean useDigitsIndicatorX = false;
+  private boolean useDigitsIndicatorY = false;
+  private Integer digitsIndicatorX = 6;
+  private Integer digitsIndicatorY = 6;
+  
   private double dScaleX = 1.0;
   private double dScaleY = 1.0;
   private boolean bScaleX = false;
@@ -116,8 +121,10 @@ public class PanelChart {
   private int maxStringWideIndicHorz = 0;  //maxStringWideIndicatorHorizontal
   private int maxStringHighTitleHorz = 0;  //maxStringHighTitleHorizontal
   private int maxStringHighVbleHorz = 0;  //maxStringHighVbleHorizontal
-  private int maxWideBox = 0;  //maxHighBox
-  private int maxHighBox = 0;  //maxWideBox
+  
+  private boolean viewVariableLabels = true;
+  private int maxWideVariableLabelsBox = 0;  //maxHighBox
+  private int maxHighVariableLabelsBox = 0;  //maxWideBox
   
   private final int displacementHorz = 0;
   private final int displacementVert = 0;
@@ -183,26 +190,10 @@ public class PanelChart {
     bUseMinY = false;
     bUseMaxY = false;
     
-//    dReqMinX = dMinVal;
-//    dReqMaxX = dMaxVal;
-//    dReqMinY = dMinVal;
-//    dReqMaxY = dMaxVal;
-//    dWorkMinX = dMinVal;
-//    dWorkMaxX = dMaxVal;
-//    dWorkMinY = dMinVal;
-//    dWorkMaxY = dMaxVal;
-    
     dLogWorkMaxX = null;
     dLogWorkMinX = null;
     dLogWorkMinY = null;
     dLogWorkMaxY = null;
-    
-//    mSWIV = 0;  //maxStringWidthIndicatorVertical
-//    maxStringWideIndicHorz = 0;  //maxStringWidthIndicatorHorizontal
-//    maxStringHighTitleHorz = 0;  //maxStringHighTitleHorizontal
-//    maxStringHighVbleHorz = 0;  //maxStringHighVbleHorizontal
-//    mWB = 0;  //maxHighBox
-//    mHB = 0;  //maxWideBox
   }
   
   public JPanel getChart() {
@@ -271,6 +262,42 @@ public class PanelChart {
   public void setScaleY(double d) {
     dScaleY = d;
   }
+  
+  
+  public void viewVariableLabels(boolean b) {
+    viewVariableLabels = b;
+  }
+  public boolean viewVariableLabels() {
+    return viewVariableLabels;
+  }
+  
+  public void useDigitsIndicatorX(boolean b) {
+    useDigitsIndicatorX = b;
+  }
+  public boolean useDigitsIndicatorX() {
+    return useDigitsIndicatorX;
+  }
+  public Integer getDigitsIndicatorX() {
+    return digitsIndicatorX;
+  }
+  public void setDigitsIndicatorX(Integer i) {
+    digitsIndicatorX = i;
+  }
+  
+  
+  public void useDigitsIndicatorY(boolean b) {
+    useDigitsIndicatorY = b;
+  }
+  public boolean useDigitsIndicatorY() {
+    return useDigitsIndicatorY;
+  }
+  public Integer getDigitsIndicatorY() {
+    return digitsIndicatorY;
+  }
+  public void setDigitsIndicatorY(Integer i) {
+    digitsIndicatorY = i;
+  }
+  
   
   public boolean useMinX() {
     return bUseMinX;
@@ -421,7 +448,7 @@ public class PanelChart {
   
   public boolean existVble(String nVble) {
   //Verifica si existe una Variable llamada nVble
-    return arlName.contains(nVble);
+    return listName.contains(nVble);
   }
   
   private boolean valueRepeated(double[] data) {
@@ -604,14 +631,14 @@ public class PanelChart {
   
   public int getNumStoredVbles() {
   //Retorna el número de variables que hay almacenadas
-    return arlName.size();
+    return listName.size();
   }
   
   private boolean addValueVble(String nVble, double valX, double valY) {
   //Agrega una valor a una variable a Graficar llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
     if (Double.isInfinite(valX) || Double.isNaN(valX)) throw new RuntimeException("Valor Horizontal Inoperable (NaN o Infinito)");
-    int indx = arlName.indexOf(nVble);
+    int indx = listName.indexOf(nVble);
     double[] aX = getVbleDataX(nVble);
     double[] aY = getVbleDataY(nVble);
     
@@ -625,91 +652,91 @@ public class PanelChart {
     aY_ValY[aY.length] = valY;     //Inserta el nuevo valor al final
     
     bubbleSortPairs(aX_ValX,aY_ValY);     //Reordena los arreglos aX_ValX y aY_ValY, siendo aX_ValX independiente y creciente
-    arlX.set(indx, aX_ValX);
-    arlY.set(indx, aY_ValY);
+    listX.set(indx, aX_ValX);
+    listY.set(indx, aY_ValY);
     
     return true;
   }
   
   public void setLabelVble(String nVble, String lbl) {
   //Establece el Render de la Variable llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
-    int indx = arlName.indexOf(nVble);
-    arlLabel.set(indx, lbl);
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    int indx = listName.indexOf(nVble);
+    listLabel.set(indx, lbl);
   }
   public void setRenderVble(String nVble, BasicStroke bs) {
   //Establece el Render de la Variable llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
-    int indx = arlName.indexOf(nVble);
-    arlBscStrk.set(indx, bs);
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    int indx = listName.indexOf(nVble);
+    listBscStrk.set(indx, bs);
   }
   
   public void viewAll() {
   //Muestra todas las graficas almacenadas en los vectores
-    for (int indx = 0; indx < arlName.size(); indx++) {
-      arlView.set(indx, Boolean.TRUE);
+    for (int indx = 0; indx < listName.size(); indx++) {
+      listView.set(indx, Boolean.TRUE);
     }
   }
   public void hideAll() {
   //Oculta todas las graficas almacenadas en los vectores
-    for (int indx = 0; indx < arlName.size(); indx++) {
-      arlView.set(indx, Boolean.FALSE);
+    for (int indx = 0; indx < listName.size(); indx++) {
+      listView.set(indx, Boolean.FALSE);
     }
   }
   public void viewVble(String nVble) {
   //Muestra la grafica de la Variable llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
-    int indx = arlName.indexOf(nVble);
-    arlView.set(indx, true);
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    int indx = listName.indexOf(nVble);
+    listView.set(indx, true);
   }
   public void hideVble(String nVble) {
   //Oculta la grafica de la Variable llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
-    int indx = arlName.indexOf(nVble);
-    arlView.set(indx, false);
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    int indx = listName.indexOf(nVble);
+    listView.set(indx, false);
   }
   public int addVble(String nVble, double[] aX, double[] aY, Color color) {
   //Agrega una variable a Graficar, llamada nVble, de Color VbleColor y Grosor zDepth
-    if (arlName.contains(nVble)) throw new RuntimeException("La Variable ya existe");
+    if (listName.contains(nVble)) throw new RuntimeException("La Variable ya existe");
     if(aX.length != aY.length) throw new RuntimeException("Talla de arreglos diferentes");
     removeInoperableHorzPairs(aX,aY);
     if(aY.length == 0) throw new RuntimeException("Arreglos de datos vacíos");
     if (valueRepeated(aX)) throw new RuntimeException("Valor repetido en Coordenada Horizontal");
-    arlName.add(nVble);
+    listName.add(nVble);
 //    sortPairs(aX,aY);     //Ordena los arreglos aX y aY, tomando a aX como independiente y creciente
     quickSortPairs(aX, aY, 0, aX.length - 1);     //Ordena los arreglos aX y aY, tomando a aX como independiente y creciente
-    arlX.add(aX);
-    arlY.add(aY);
-    arlColor.add(color);
-    arlBscStrk.add(new BasicStroke(1.0f));
-    arlLabel.add(nVble);
-    arlView.add(true);
+    listX.add(aX);
+    listY.add(aY);
+    listColor.add(color);
+    listBscStrk.add(new BasicStroke(1.0f));
+    listLabel.add(nVble);
+    listView.add(true);
     
-    return arlName.size();
+    return listName.size();
   }
   public int delVble(String nVble) {
   //Elimina una variable a Graficar llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
-    int indx = arlName.indexOf(nVble);
-    arlName.remove(indx);
-    arlX.remove(indx);
-    arlY.remove(indx);
-    arlColor.remove(indx);
-    arlBscStrk.remove(indx);
-    arlLabel.remove(indx);
-    arlView.remove(indx);
-    return arlName.size();
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    int indx = listName.indexOf(nVble);
+    listName.remove(indx);
+    listX.remove(indx);
+    listY.remove(indx);
+    listColor.remove(indx);
+    listBscStrk.remove(indx);
+    listLabel.remove(indx);
+    listView.remove(indx);
+    return listName.size();
   }
   public int delAllVble() {
   //Elimina una variable a Graficar llamada nVble
-    if (!arlName.isEmpty()) {//throw new RuntimeException("No hay variables"); 
-      arlName.clear();
-      arlX.clear();
-      arlY.clear();
-      arlColor.clear();
-      arlBscStrk.clear();
-      arlLabel.clear();
-      arlView.clear();
+    if (!listName.isEmpty()) {//throw new RuntimeException("No hay variables"); 
+      listName.clear();
+      listX.clear();
+      listY.clear();
+      listColor.clear();
+      listBscStrk.clear();
+      listLabel.clear();
+      listView.clear();
 
       minCoordinateX = DOUBLE_MAX_VALUE;  //  Mínimo Valor de Y
       maxCoordinateX = DOUBLE_MIN_VALUE;  //  Máximo Valor de X
@@ -721,32 +748,40 @@ public class PanelChart {
   
   private double[] getVbleDataX(String nVble) {
   //Retorna el arreglo de datos X llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
-    int indx = arlName.indexOf(nVble);
-    return arlX.get(indx);
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    int indx = listName.indexOf(nVble);
+    return listX.get(indx);
   }
   private double[] getVbleDataY(String nVble) {
   //Retorna el arreglo de datos Y llamada nVble
-    if (!arlName.contains(nVble)) throw new RuntimeException("La Variable no existe");
-    int indx = arlName.indexOf(nVble);
-    return arlY.get(indx);
+    if (!listName.contains(nVble)) throw new RuntimeException("La Variable no existe");
+    int indx = listName.indexOf(nVble);
+    return listY.get(indx);
   }
+  
+  
   
   private void getWiderIndicatorY() {
     //Only used in plotAll (getBounds)
     //Returns the Wide Value of wider Indicator Number
     g2d.setFont(indicatorFont);
     FontMetrics fm = g2d.getFontMetrics();
-    double dStpY = (dWorkMaxY - dWorkMinY)/gridDivVertY;
-    if (dStpY < 0.0000001) {
-      dStpY = 0.0000001; //Avoid Infinite Loop
-    }
-    double i = dWorkMinY;
     int maxStringWide = 0;
-    while (i <= dWorkMaxY) {
-      double I = fracVal(i,iFracY);
-      maxStringWide = Math.max(maxStringWide, fm.stringWidth(String.valueOf(I)));
-      i += dStpY;
+    if (useDigitsIndicatorY) {
+      maxStringWide = fm.stringWidth(getPadded('w', digitsIndicatorY));
+    } else {
+      double dStpY = (dWorkMaxY - dWorkMinY)/gridDivVertY;
+      if (dStpY < 0.0000001) {
+        dStpY = 0.0000001; //Avoid Infinite Loop
+      }
+      double i = dWorkMinY;
+      while (i <= dWorkMaxY) {
+        double I = fracVal(i,iFracY);
+        //System.out.println("\tgetWiderIndicatorY.i:" + i);
+        //System.out.println("\tgetWiderIndicatorY.I:" + I);
+        maxStringWide = Math.max(maxStringWide, fm.stringWidth(String.valueOf(I)));
+        i += dStpY;
+      }
     }
     maxStringWide += (int)(1.5*(double)fm.getHeight());
     maxStringWide += fm.stringWidth("w");
@@ -757,13 +792,17 @@ public class PanelChart {
     //Returns the Wide Value of wider Indicator Number
     g2d.setFont(indicatorFont);
     FontMetrics fm = g2d.getFontMetrics();
-    double dStpX = (dWorkMaxX - dWorkMinX)/gridDivHorzX;
-    double i = dWorkMinX;
     int maxStringWide = 0;
-    while (i <= dWorkMaxX) {
-      double I = fracVal(i,iFracX);
-      maxStringWide = Math.max(maxStringWide, fm.stringWidth(String.valueOf(I)));
-      i += dStpX;
+    if (useDigitsIndicatorX) {
+      maxStringWide = fm.stringWidth(getPadded('w', digitsIndicatorX));
+    } else {
+      double dStpX = (dWorkMaxX - dWorkMinX)/gridDivHorzX;
+      double i = dWorkMinX;
+      while (i <= dWorkMaxX) {
+        double I = fracVal(i,iFracX);
+        maxStringWide = Math.max(maxStringWide, fm.stringWidth(String.valueOf(I)));
+        i += dStpX;
+      }
     }
     maxStringWide += fm.getHeight();
     maxStringWide += fm.stringWidth("w");
@@ -1017,11 +1056,11 @@ public class PanelChart {
     getWiderIndicatorX();  //Indicator Numbers located Low in Horizontal Axe
     getHighTitleX();
     getHighVbleX();
-    if (!arlName.isEmpty()) {
+    if (!listName.isEmpty()) {
       beginCoordinateX = borderHorz + maxStringWideIndicVert;  //Lefter
       beginCoordinateY = yLarge - borderVert - maxStringHighVbleHorz;//(Largo - 20) - 30 = Largo - 50  //Down Position, Greater Value
 //      finalCoordinateX = Ancho - borderHorz - maxStringWideIndicHorz/2;  //Righter
-      finalCoordinateX = xWidth - borderHorz - maxWideBox;  //Righter
+      finalCoordinateX = xWidth - borderHorz - maxWideVariableLabelsBox;  //Righter
       finalCoordinateY = borderVert + maxStringHighTitleHorz;  //60 - 20 = 40  //Up Position, Lower Value
       halfCoordinateX = (finalCoordinateX + beginCoordinateX)/2;
       halfCoordinateY = (beginCoordinateY + finalCoordinateY)/2;
@@ -1041,21 +1080,21 @@ public class PanelChart {
     maxCoordinateX = DOUBLE_MIN_VALUE;
     minCoordinateY = DOUBLE_MAX_VALUE;
     maxCoordinateY = DOUBLE_MIN_VALUE;
-    for (int indx = 0; indx < arlName.size(); indx++) {
-      if(arlView.get(indx)) {
+    for (int indx = 0; indx < listName.size(); indx++) {
+      if(listView.get(indx)) {
         if (bLogRespHorzX) {
-          minCoordinateX = Math.min(minCoordinateX, getMinGreaterThanZero(arlX.get(indx)));
+          minCoordinateX = Math.min(minCoordinateX, getMinGreaterThanZero(listX.get(indx)));
         } else {
-          minCoordinateX = Math.min(minCoordinateX, getMin(arlX.get(indx)));
+          minCoordinateX = Math.min(minCoordinateX, getMin(listX.get(indx)));
         }
-        maxCoordinateX = Math.max(maxCoordinateX, getMax(arlX.get(indx)));
+        maxCoordinateX = Math.max(maxCoordinateX, getMax(listX.get(indx)));
         
         if (bLogRespVertY) {
-          minCoordinateY = Math.min(minCoordinateY, getMinGreaterThanZero(arlY.get(indx)));
+          minCoordinateY = Math.min(minCoordinateY, getMinGreaterThanZero(listY.get(indx)));
         } else {
-          minCoordinateY = Math.min(minCoordinateY, getMin(arlY.get(indx)));
+          minCoordinateY = Math.min(minCoordinateY, getMin(listY.get(indx)));
         }
-        maxCoordinateY = Math.max(maxCoordinateY, getMax(arlY.get(indx)));
+        maxCoordinateY = Math.max(maxCoordinateY, getMax(listY.get(indx)));
       }
     }
     dWorkMinY = Math.max(DOUBLE_MIN_VALUE, minCoordinateY);
@@ -1111,24 +1150,25 @@ public class PanelChart {
     g2d.setFont(labelFont);
     FontMetrics fm = g2d.getFontMetrics();
     int brdr = fm.stringWidth("w");
-    for (int indx = 0; indx < arlName.size(); indx++) {
-      if(arlView.get(indx)) {
-        wideBox = Math.max(fm.stringWidth(arlLabel.get(indx)),wideBox);
-        viewVble++;
+    if (viewVariableLabels) {
+      for (int indx = 0; indx < listName.size(); indx++) {
+        if(listView.get(indx)) {
+          wideBox = Math.max(fm.stringWidth(listLabel.get(indx)),wideBox);
+          viewVble++;
+        }
       }
+      wideBox += brdr;  // Space Box and Widest Label
+      wideBox += brdr;  // Space Widest Label and DemoLine
+      wideBox += 16;  // Space Wide of DemoLine
+      wideBox += brdr;  // Space DemoLine and Box
     }
-    wideBox += brdr;  // Space Box and Widest Label
-    wideBox += brdr;  // Space Widest Label and DemoLine
-    wideBox += 16;  // Space Wide of DemoLine
-    wideBox += brdr;  // Space DemoLine and Box
     wideBox += 2*brdr;  // Left and Right Space
-    
     highBox += viewVble*(fm.getHeight());
     highBox += fm.getDescent();
     highBox += 2*brdr;  // Top and Bot Space
     
-    maxWideBox = wideBox;
-    maxHighBox = highBox;
+    maxWideVariableLabelsBox = wideBox;
+    maxHighVariableLabelsBox = highBox;
   }
   private void plotBoxLabel() {
     //Only used in plotAll 
@@ -1137,23 +1177,25 @@ public class PanelChart {
     g2d.setFont(labelFont);
     FontMetrics fm = g2d.getFontMetrics();
     int brdr = fm.stringWidth("w");
-    g2d.drawRect(displacementHorz + finalCoordinateX + brdr, 
-        displacementVert + halfCoordinateY + brdr - maxHighBox/2, 
-        maxWideBox - 2*brdr, maxHighBox - 2*brdr);
-    int viewVble = 0;
-    for (int indx = 0; indx < arlName.size(); indx++) {
-      if(arlView.get(indx)) {
-        int pX = displacementHorz + finalCoordinateX + 2*brdr;
-        int pY = displacementVert + halfCoordinateY + 2*brdr - maxHighBox/2 
-            + fm.getAscent()/2 + viewVble*(fm.getHeight());
-        g2d.setColor(labelColor);
-        g2d.drawString(arlLabel.get(indx), pX + 16 + brdr, pY);
-        g2d.setColor(arlColor.get(indx));
-        g2d.setStroke(arlBscStrk.get(indx));
-        g2d.drawLine(
-            pX, pY + 0*(fm.getAscent() - fm.getDescent())/2, 
-            pX + 16, pY - (fm.getAscent() - fm.getDescent()));
-        viewVble++;
+    if (viewVariableLabels) {
+      g2d.drawRect(displacementHorz + finalCoordinateX + brdr, 
+          displacementVert + halfCoordinateY + brdr - maxHighVariableLabelsBox/2, 
+          maxWideVariableLabelsBox - 2*brdr, maxHighVariableLabelsBox - 2*brdr);
+      int viewVble = 0;
+      for (int indx = 0; indx < listName.size(); indx++) {
+        if(listView.get(indx)) {
+          int pX = displacementHorz + finalCoordinateX + 2*brdr;
+          int pY = displacementVert + halfCoordinateY + 2*brdr - maxHighVariableLabelsBox/2 
+              + fm.getAscent()/2 + viewVble*(fm.getHeight());
+          g2d.setColor(labelColor);
+          g2d.drawString(listLabel.get(indx), pX + 16 + brdr, pY);
+          g2d.setColor(listColor.get(indx));
+          g2d.setStroke(listBscStrk.get(indx));
+          g2d.drawLine(
+              pX, pY + 0*(fm.getAscent() - fm.getDescent())/2, 
+              pX + 16, pY - (fm.getAscent() - fm.getDescent()));
+          viewVble++;
+        }
       }
     }
   }
@@ -1205,7 +1247,7 @@ public class PanelChart {
   }
   private void plotAll() {
   //Grafica todas las variables Visibles almacenadas en los vectores
-    if (!arlName.isEmpty()) {
+    if (!listName.isEmpty()) {
       getMinMaxValueExtrems();
       getDimsBoxLabel();
       getPositionScreenBounds();
@@ -1216,8 +1258,8 @@ public class PanelChart {
       plotNameVbleX();
       plotTitleX();
       plotBoxLabel();
-      for (int indx = 0; indx < arlName.size(); indx++) {
-        if (arlView.get(indx)) { //Se debe visualizar la variable?
+      for (int indx = 0; indx < listName.size(); indx++) {
+        if (listView.get(indx)) { //Se debe visualizar la variable?
           plotVble(indx);
         }
       }
@@ -1227,11 +1269,11 @@ public class PanelChart {
     //System.out.println("plotVble(" + indx + ")");
     //Only used in plotAll 
   //Recarga una gráfica para mostrarla
-    Color color = arlColor.get(indx);
-    double[] aX = arlX.get(indx);
-    double[] aY = arlY.get(indx);
+    Color color = listColor.get(indx);
+    double[] aX = listX.get(indx);
+    double[] aY = listY.get(indx);
     g2d.setColor(color);
-    g2d.setStroke(arlBscStrk.get(indx));
+    g2d.setStroke(listBscStrk.get(indx));
     if (aX.length == 1) {
       boolean bDoDraw = true;
       if (Double.isInfinite(aX[0]) || Double.isNaN(aX[0])) {
@@ -1390,14 +1432,14 @@ public class PanelChart {
   }
   
   boolean hasPlottable() {
-    return (!arlName.isEmpty());
+    return (!listName.isEmpty());
   }
   
   public String[] getAllVblesName() {
   //Retorna un arreglo con los nombres de las variables almacenadas
-    String[] Vbles = new String[arlName.size()];
-    for (int i = 0; i < arlName.size();i++) {
-      Vbles[i] = arlName.get(i);
+    String[] Vbles = new String[listName.size()];
+    for (int i = 0; i < listName.size();i++) {
+      Vbles[i] = listName.get(i);
     }
     return Vbles;
   }
@@ -1465,6 +1507,20 @@ public class PanelChart {
   private double fracVal(double value, int frac) {
     return Math.round(value * Math.pow(10.0, frac)) / Math.pow(10.0, frac);
   }
+  
+  private String getPadded(char c, int p) {
+    char[] chars = new char[p];
+    Arrays.fill(chars, c);
+    return new String(chars);
+  }
+
+  public static String getPadded(char c, int p, String s) {
+    //Return a String filled character 'c' characters with (p s.length()) length 
+    char[] chars = new char[p - s.length()];
+    Arrays.fill(chars, c);
+    return new String(chars);
+  }
+
   
   private double getBaseLoPowValue(double value, double base) {
     Double loPow = null;

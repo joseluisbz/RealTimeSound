@@ -6,3 +6,5 @@ Test-RealTimeSound.mov
 
 # Files Setting macOS
 .DS_Store
+/build/
+*/.DS_Store
